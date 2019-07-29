@@ -1,9 +1,10 @@
 import React from 'react'
 import { Chart, Geom, Axis, Tooltip, Legend, Label } from 'bizcharts'
 import DataSet from '@antv/data-set'
-import { reduceFieldsOfObj } from './utils'
+import { reduceFieldsOfObj, renderAmountInPlot } from './utils'
+import { Button } from 'antd';
 
-const data = [
+const mockData = [
   {
     药品全球研发阶段: '临床前',
     临床前: 5,
@@ -31,15 +32,15 @@ const data = [
 
 const fields = ['临床前', '临床0期', '临床I期', '临床II期']
 
-const stageData = reduceFieldsOfObj(data, fields)
-
 window.test = rrr => {
   console.log(rrr)
 }
 
-const drawMap = {}
-
 function DrugInfo() {
+  const [data, setData] = React.useState(mockData)
+
+  const stageData = reduceFieldsOfObj(data, fields)
+
   const ds = new DataSet()
   const dv = ds.createView().source(data)
   dv.transform({
@@ -101,41 +102,14 @@ function DrugInfo() {
         >
           <Label
             content="临床前"
-            htmlTemplate={(text, item, index) => {
-              console.log(index, stageData[item.point['阶段']])
-
-              /** 当前处在的柱子的索引值, 从 0 开始 */
-              const pillarIndex = index % fields.length
-              console.log('当前数据处在的柱子的索引值:', pillarIndex)
-              console.log('当前的 shape 块的值:', item.point['数量'])
-
-              if (index < fields.length) {
-                // 处在第一层数据中, 如果有数据, 说明还图形存在,
-                // 将总数绘制于这个图形之上
-                if (item.point['数量']) {
-                  // 存下该柱子已经被绘制
-                  drawMap[pillarIndex] = true
-                  console.log(item.point)
-                  return `<a class="GND-Chart-totalInPillar" style="white-space:nowrap">${
-                    stageData[item.point['阶段']]
-                  }</a>`
-                } else {
-                  // 说明底层还会有数据, 跳过不绘制
-                  return
-                }
-              } else {
-                // 如果该柱子还没有被绘制
-                if (!drawMap[pillarIndex]) {
-                  // 并且该 shape 有数据
-                  if (item.point['数量']) {
-                    drawMap[pillarIndex] = true
-                    return `<a class="GND-Chart-totalInPillar" onclick="test(444)" style="white-space:nowrap">${
-                      stageData[item.point['阶段']]
-                    }</a>`
-                  }
-                }
-              }
-            }}
+            htmlTemplate={renderAmountInPlot('数量', fields.length, (index, item) => {
+              console.log(index)
+              return `
+                <a class="GND-Chart-totalInPillar" style="white-space:nowrap">${
+                  stageData[item.point['阶段']]
+                }</a>
+              `
+            })}
           />
         </Geom>
       </Chart>

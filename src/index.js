@@ -109,10 +109,6 @@ data.forEach(item => {
   }
 })
 
-console.log(activeExtreme, inactiveExtreme)
-
-console.log(chartData)
-
 function App() {
   const [currentPage, setCurrentPage] = React.useState(1)
   const [data, setData] = React.useState(chartData.slice(0, 10))

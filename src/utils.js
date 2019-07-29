@@ -26,6 +26,41 @@ export const reduceFieldsOfObj = (datas, fields) => {
   return result
 }
 
-export const isRenderAmountInPlot = () => {
-  return (test, item, index) => {}
+/**
+ * 
+ * @param {string} objKey 对象的 key
+ * @param {number} pillars 柱子数量
+ * @param {(index: number, item: {}) => void} render 
+ */
+export const renderAmountInPlot = (objKey, pillars, render) => {
+  const drawMap = {}
+  return (text, item, index) => {
+    /** 当前处在的柱子的索引值, 从 0 开始 */
+    const pillarIndex = index % pillars
+    const pointValue = item.point[objKey]
+
+    if (index < pillars) {
+      // 处在第一层数据中, 如果有数据, 说明还图形存在,
+      if (pointValue) {
+        // 存下该柱子已经被绘制
+        drawMap[pillarIndex] = true
+        // 调用 render 回调
+        return render(index, item)
+      }
+    } else {
+      // 处在非第一层数据中, 判断该柱子是否已经被绘制
+      if (
+        // 如果该柱子还没有被绘制
+        !drawMap[pillarIndex] &&
+        // 并且该节点存在数据
+        pointValue
+      ) {
+        // 存下该柱子已经被绘制
+        drawMap[pillarIndex] = true
+        // 调用 render 回调
+        return render(index, item)
+      }
+    }
+
+  }
 }

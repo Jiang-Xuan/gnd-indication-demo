@@ -1,4 +1,4 @@
-import { reduceFieldsOfObj, isRenderAmountInPlot } from './utils'
+import { reduceFieldsOfObj, renderAmountInPlot } from './utils'
 
 describe('reduceFieldsOfObj', () => {
   test('第一个参数不是数组时抛出错误', () => {
@@ -35,54 +35,55 @@ describe('reduceFieldsOfObj', () => {
   })
 })
 
-describe('isRenderAmountInPlot', () => {
+describe('when pillars = 2 renderAmountInPlot', () => {
   const objKey = 'amount'
+  const pillars = 2
   test('return a function', () => {
-    expect(isRenderAmountInPlot()).toBeInstanceOf(Function)
+    expect(renderAmountInPlot()).toBeInstanceOf(Function)
   })
 
   test('returned function need three argument', () => {
-    expect(isRenderAmountInPlot().length).toBe(3)
+    expect(renderAmountInPlot().length).toBe(3)
   })
 
-  test('when every has amount', () => {
-    const pillars = 2
+  test('when every has key that need calc', () => {
     const data = [
       { amount: 6 }, // 0
       { amount: 7 }, // 1
       { amount: 6 }, // 2
       { amount: 7 } // 3
     ]
-    const shouldRender = jest.fn()
+    const render = jest.fn()
+
+    const returnFunction = renderAmountInPlot(objKey, pillars, render)
 
     data.forEach((item, index) => {
-      isRenderAmountInPlot(objKey, pillars, shouldRender)('TEST', item, index)
+      const bizChartItem = { point: { ...item } }
+      returnFunction('TEST', bizChartItem, index)
     })
 
-    console.log(expect(shouldRender))
+    expect(render).toBeCalledTimes(2)
 
-    expect(shouldRender).toBeCalledTimes(2)
-
-    expect(shouldRender.mock.calls[0]).toEqual([0, { amount: 6 }])
-    expect(shouldRender).toHaveBeenNthCalledWith(2, 2, { amount: 6 })
+    expect(render).toHaveBeenNthCalledWith(1, 0, { point: { amount: 6 } })
+    expect(render).toHaveBeenNthCalledWith(2, 1, { point: { amount: 7 } })
   })
 
-  test('when someone not has amount', () => {
-    const pillars = 2
+  test('when someone not has key', () => {
     const data = [
-      //                         第一个柱子  第二个柱子
-      { amount: 6 }, //    0       | 0 |   | 1 |
-      { noAmount: '' }, // 1       | 2 |   | 3 |
-      { noAmount: '' }, // 2       |   |   |   |
-      { amount: 7 } //     3     ------------------
+      //                              第一个柱子           第二个柱子
+      { amount: 6 }, //    0       | 0 - amount   |   | 1 - noAmount |
+      { noAmount: '' }, // 1       | 2 - noAmount |   | 3 - amount   |
+      { noAmount: '' }, // 2       |              |   |              |
+      { amount: 7 } //     3     ----------------------------------------
     ]
     const shouldRender = jest.fn()
 
     data.forEach((item, index) => {
-      isRenderAmountInPlot(objKey, pillars, shouldRender)('TEST', item, index)
+      const bizChartItem = { point: { ...item } }
+      renderAmountInPlot(objKey, pillars, shouldRender)('TEST', bizChartItem, index)
     })
 
-    expect(shouldRender).toHaveBeenNthCalledWith(1, 0, { amount: 6 })
-    expect(shouldRender).toHaveBeenNthCalledWith(2, 3, { amount: 7 })
+    expect(shouldRender).toHaveBeenNthCalledWith(1, 0, { point: { amount: 6 } })
+    expect(shouldRender).toHaveBeenNthCalledWith(2, 3, { point: { amount: 7 } })
   })
 })
