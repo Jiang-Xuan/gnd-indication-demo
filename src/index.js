@@ -1,12 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Chart, Geom, Axis, Tooltip, Label } from 'bizcharts'
-import { Pagination, LocaleProvider } from 'antd'
+import { Pagination, LocaleProvider, Alert, Radio } from 'antd'
 import zhCn from 'antd/lib/locale-provider/zh_CN'
 import { data } from './mockData'
 import DrugInfo from './DrugInfo'
 
 import 'antd/dist/antd.css'
+
+import './styles.css'
 
 /**
  * @description 活跃状态下的阶段的颜色, 由浅至深
@@ -112,6 +114,7 @@ data.forEach(item => {
 function App() {
   const [currentPage, setCurrentPage] = React.useState(1)
   const [data, setData] = React.useState(chartData.slice(0, 10))
+  const [mode, setMode] = React.useState('active')
 
   const handlePlotClick = event => {
     // 传递参数 药品名&药品ID&阶段(stage)&靶点(target)
@@ -129,85 +132,110 @@ function App() {
     )
   }
 
+  const handleModeChange = (event) => {
+    setMode(event.target.value)
+  }
+
   return (
     <LocaleProvider locale={zhCn}>
-      <div className="App">
+      <div className="mx-6">
         <DrugInfo />
-        <Chart
-          data={data}
-          padding="auto"
-          scale={{
-            stage: {
-              type: 'cat',
-              values: stageAxis
-            },
-            target: {
-              type: 'cat',
-              values: targetAxis
-            }
-          }}
-          height={200}
-          forceFit
-          onPlotClick={handlePlotClick}
-        >
-          <Axis name="stage" position="top" />
-          <Axis name="target" />
-          <Geom
-            type="polygon"
-            position="stage*target"
-            tooltip={[
-              'drugAmount',
-              drugAmount => {
-                return {
-                  name: '药品数量',
-                  value: drugAmount
-                }
-              }
-            ]}
-            color={[
-              'drugAmount*stageStatus',
-              (drugAmount, stageStatus) => {
-                if (stageStatus === 'active') {
-                  const [, max] = activeExtreme
-                  const piece = max / activeColors.length
-
-                  let pieceIndex = Number.parseInt(drugAmount / piece, 10)
-                  if (pieceIndex === 0) {
-                    pieceIndex = 1
-                  }
-                  return activeColors[pieceIndex - 1]
-                } else if (stageStatus === 'inactive') {
-                  const [, max] = inactiveExtreme
-                  const piece = max / inactiveColors.length
-
-                  let pieceIndex = Number.parseInt(drugAmount / piece, 10)
-                  if (pieceIndex === 0) {
-                    pieceIndex = 1
-                  }
-                  return inactiveColors[pieceIndex - 1]
-                }
-              }
-            ]}
-          >
-            <Tooltip />
-            <Label
-              textStyle={{
-                fill: '#fff',
-                shadowBlur: 2,
-                shadowColor: 'rgba(0, 0, 0, .45)'
-              }}
-              offset={-2}
-              content="drugAmount"
+        <div className="Box">
+          <div className="Box-header">
+            靶点关系图表
+          </div>
+          <div className="Box-body">
+            <Alert showIcon className="mb-2"
+              message="PD-1, PD-2, PD-3等靶点支持 click, 暂不支持 hover 状态, 建议添加引导来告知用户靶点可点"
+              type="warning"
             />
-          </Geom>
-        </Chart>
-        <Pagination
-          onChange={handlePaginationChange}
-          showQuickJumper
-          total={400}
-          current={currentPage}
-          pageSize={10}
-        />
+            <div className="mb-2">
+              <span>色块 hover 模式: </span>
+              <Radio.Group onChange={handleModeChange} value={mode}>
+                <Radio value={'active'}>激活</Radio>
+                <Radio value={'highlight'}>高亮</Radio>
+              </Radio.Group>
+            </div>
+            <Chart
+              data={data}
+              padding="auto"
+              scale={{
+                stage: {
+                  type: 'cat',
+                  values: stageAxis
+                },
+                target: {
+                  type: 'cat',
+                  values: targetAxis
+                }
+              }}
+              height={200}
+              forceFit
+              onPlotClick={handlePlotClick}
+            >
+              <Axis name="stage" position="top" />
+              <Axis name="target" />
+              <Geom
+                type="polygon"
+                position="stage*target"
+                tooltip={[
+                  'drugAmount',
+                  drugAmount => {
+                    return {
+                      name: '药品数量',
+                      value: drugAmount
+                    }
+                  }
+                ]}
+                active={[true, {
+                  highlight: mode === 'highlight',
+                }]}
+                color={[
+                  'drugAmount*stageStatus',
+                  (drugAmount, stageStatus) => {
+                    if (stageStatus === 'active') {
+                      const [, max] = activeExtreme
+                      const piece = max / activeColors.length
+
+                      let pieceIndex = Number.parseInt(drugAmount / piece, 10)
+                      if (pieceIndex === 0) {
+                        pieceIndex = 1
+                      }
+                      return activeColors[pieceIndex - 1]
+                    } else if (stageStatus === 'inactive') {
+                      const [, max] = inactiveExtreme
+                      const piece = max / inactiveColors.length
+
+                      let pieceIndex = Number.parseInt(drugAmount / piece, 10)
+                      if (pieceIndex === 0) {
+                        pieceIndex = 1
+                      }
+                      return inactiveColors[pieceIndex - 1]
+                    }
+                  }
+                ]}
+              >
+                <Tooltip />
+                <Label
+                  textStyle={{
+                    fill: '#fff',
+                    shadowBlur: 2,
+                    shadowColor: 'rgba(0, 0, 0, .45)'
+                  }}
+                  offset={-2}
+                  content="drugAmount"
+                />
+              </Geom>
+            </Chart>
+            <Pagination
+              onChange={handlePaginationChange}
+              showQuickJumper
+              total={400}
+              current={currentPage}
+              pageSize={10}
+            />
+          </div>
+        </div>
       </div>
     </LocaleProvider>
   )
