@@ -11,7 +11,7 @@
     "antd": "3.5.4",
     "bizcharts": "3.2.2",
     "jest": "24.7.1",
-    "jquery": "3.4.0",
+    "jquery": "3.5.0",
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-scripts": "3.0.1"
